@@ -170,7 +170,7 @@ public class ProjectController
         return _win;
     }
 
-    protected function exportAll (modifiedOnly :Boolean) :void {
+    public function exportAll (modifiedOnly :Boolean) :void {
         for each (var status :DocStatus in _flashDocsGrid.dataProvider.toArray()) {
             if (status.isValid && (!modifiedOnly || status.isModified)) {
                 exportFlashDocument(status);
@@ -272,7 +272,7 @@ public class ProjectController
         });
     }
 
-    protected function reloadNow () :void {
+    public function reloadNow () :void {
         setImportDirectory(_importChooser.dir);
         onSelectedItemChanged();
     }
@@ -404,6 +404,10 @@ public class ProjectController
             status.updateModified(Ternary.of(pub == null || pub.modified(lib)));
             for each (var err :ParseError in lib.getErrors()) _errorsGrid.dataProvider.addItem(err);
             status.updateValid(Ternary.of(lib.valid));
+
+            exportAll(false);
+            trace("CLOVERFIELD AUTO EXPORT COMPLETE!  (closing application now...");
+            _win.close();
         });
         load.failed.connect(function (error :Error) :void {
             trace("Failed to load " + file.nativePath + ": " + error);
@@ -412,7 +416,7 @@ public class ProjectController
         });
     }
 
-    protected function setProjectDirty (val :Boolean) :void {
+    public function setProjectDirty (val :Boolean) :void {
         if (_projectDirty != val) {
             _projectDirty = val;
             updateWindowTitle();

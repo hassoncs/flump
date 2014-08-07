@@ -10,6 +10,7 @@ import flash.desktop.NativeApplication;
 import flash.display.NativeMenuItem;
 import flash.events.Event;
 import flash.events.InvokeEvent;
+import flash.events.MouseEvent;
 import flash.filesystem.File;
 import flash.media.SoundMixer;
 import flash.media.SoundTransform;
@@ -69,6 +70,22 @@ public class FlumpApp
             if (_projects.length == 0) {
                 newProject();
             }
+
+//            var controller = _projects[0];
+
+            // Clover-hack, auto export when the project is opened for easy command-line use
+//            controller.reloadNow();
+//
+//            controller.exportAll(true);
+//            controller.exportAll(false);
+//            controller.exportAll(true);
+//
+//        var clickEvent : MouseEvent = new MouseEvent(MouseEvent.CLICK);
+//        controller.win.exportAll.dispatchEvent(clickEvent);
+
+//            controller.save();
+
+            trace("CLOVER HACK WORKING!");
         });
 
         // When we quit, save the list of currently-open projects
