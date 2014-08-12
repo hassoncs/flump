@@ -22,6 +22,7 @@ import flump.executor.Future;
 import flump.xfl.ParseError;
 import flump.xfl.XflLibrary;
 
+import mx.events.FlexEvent;
 import mx.events.PropertyChangeEvent;
 import mx.managers.PopUpManager;
 
@@ -174,6 +175,8 @@ public class ProjectController
         for each (var status :DocStatus in _flashDocsGrid.dataProvider.toArray()) {
             if (status.isValid && (!modifiedOnly || status.isModified)) {
                 exportFlashDocument(status);
+            } else if (modifiedOnly || !status.isModified) {
+                trace("Skipping export, nothing has changed.");
             }
         }
     }
@@ -354,7 +357,7 @@ public class ProjectController
     }
 
     protected function exportFlashDocument (status :DocStatus) :void {
-        const stage :Stage = NA.activeWindow.stage;
+        const stage :Stage = _win.stage;
         const prevQuality :String = stage.quality;
 
         stage.quality = StageQuality.BEST;
@@ -398,6 +401,7 @@ public class ProjectController
         const status :DocStatus = new DocStatus(name, Ternary.UNKNOWN, Ternary.UNKNOWN, null);
         _flashDocsGrid.dataProvider.addItem(status);
 
+
         load.succeeded.connect(function (lib :XflLibrary) :void {
             var pub :Publisher = createPublisher();
             status.lib = lib;
@@ -406,8 +410,10 @@ public class ProjectController
             status.updateValid(Ternary.of(lib.valid));
 
             exportAll(false);
-            trace("CLOVERFIELD AUTO EXPORT COMPLETE!  (closing application now...");
+            trace("CLOVERFIELD AUTO EXPORT COMPLETE!  (closing application now...)");
+
             _win.close();
+            NA.exit();
         });
         load.failed.connect(function (error :Error) :void {
             trace("Failed to load " + file.nativePath + ": " + error);
