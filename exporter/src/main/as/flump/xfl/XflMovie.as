@@ -47,7 +47,7 @@ public class XflMovie extends XflSymbol
 
         const layerEls :XMLList = xml.timeline.DOMTimeline[0].layers.DOMLayer;
         if (XmlUtil.getStringAttr(layerEls[0], XflLayer.NAME) == "flipbook") {
-            movie.layers.push(XflLayer.parse(lib, location, layerEls[0], true));
+            movie.layers.push(XflLayer.parse(lib, location, layerEls[0], true, false));
             if (exportName == null) {
                 lib.addError(location, ParseError.CRIT, "Flipbook movie '" + movie.id + "' not exported");
             }
@@ -57,8 +57,10 @@ public class XflMovie extends XflSymbol
         } else {
             for each (var layerEl :XML in layerEls) {
                 var layerType :String = XmlUtil.getStringAttr(layerEl, XflLayer.TYPE, "");
-                if ((layerType != XflLayer.TYPE_GUIDE) && (layerType != XflLayer.TYPE_FOLDER)) {
-                    movie.layers.unshift(XflLayer.parse(lib, location, layerEl, false));
+                var isGuideLayer :Boolean = (layerType == XflLayer.TYPE_GUIDE)
+                if ((layerType != XflLayer.TYPE_FOLDER)) {
+                    var layer :LayerMold = XflLayer.parse(lib, location, layerEl, false, isGuideLayer);
+                    movie.layers.unshift(layer);
                 }
             }
         }

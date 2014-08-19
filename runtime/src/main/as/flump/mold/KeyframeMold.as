@@ -36,6 +36,8 @@ public class KeyframeMold
     /** Tween easing. Only valid if tweened==true. */
     public var ease :Number = 0;
 
+    public var width :Number = 0.0, height :Number = 0.0;
+
     public static function fromJSON (o :Object) :KeyframeMold {
         const mold :KeyframeMold = new KeyframeMold();
         mold.index = require(o, "index");
@@ -45,6 +47,7 @@ public class KeyframeMold
         extractFields(o, mold, "scale", "scaleX", "scaleY");
         extractFields(o, mold, "skew", "skewX", "skewY");
         extractFields(o, mold, "pivot", "pivotX", "pivotY");
+        extractFields(o, mold, "size", "width", "height");
         extractField(o, mold, "alpha");
         extractField(o, mold, "visible");
         extractField(o, mold, "ease");
@@ -75,6 +78,7 @@ public class KeyframeMold
             if (scaleX != 1 || scaleY != 1) json.scale = [round(scaleX), round(scaleY)];
             if (skewX != 0 || skewY != 0) json.skew = [round(skewX), round(skewY)];
             if (pivotX != 0 || pivotY != 0) json.pivot = [round(pivotX), round(pivotY)];
+            if (width != 0 || height != 0) json.size = [round(width), round(height)];
             if (alpha != 1) json.alpha = round(alpha);
             if (!visible) json.visible = visible;
             if (!tweened) json.tweened = tweened;
@@ -92,6 +96,7 @@ public class KeyframeMold
             if (scaleX != 1 || scaleY != 1) xml.@scale = "" + round(scaleX) + "," + round(scaleY);
             if (skewX != 0 || skewY != 0) xml.@skew = "" + round(skewX) + "," + round(skewY);
             if (pivotX != 0 || pivotY != 0) xml.@pivot = "" + round(pivotX) + "," + round(pivotY);
+            if (width != 0 || height != 0) xml.@size = "" + round(width) + "," + round(height);
             if (alpha != 1) xml.@alpha = round(alpha);
             if (!visible) xml.@visible = visible;
             if (!tweened) xml.@tweened = tweened;
@@ -101,7 +106,7 @@ public class KeyframeMold
         return xml;
     }
 
-    protected static function extractFields(o :Object, destObj :Object, source :String,
+    public static function extractFields(o :Object, destObj :Object, source :String,
         dest1 :String, dest2 :String) :void {
         const extracted :* = o[source];
         if (extracted === undefined) return;
@@ -109,13 +114,13 @@ public class KeyframeMold
         destObj[dest2] = extracted[1];
     }
 
-    protected static function extractField(o :Object, destObj :Object, field :String) :void {
+    public static function extractField(o :Object, destObj :Object, field :String) :void {
         const extracted :* = o[field];
         if (extracted === undefined) return;
         destObj[field] = extracted;
     }
 
-    protected static function round (n :Number, places :int = 4) :Number {
+    public static function round (n :Number, places :int = 4) :Number {
         const shift :int = Math.pow(10, places);
         return Math.round(n * shift) / shift;
     }

@@ -6,6 +6,7 @@ package flump.xfl {
 import aspire.util.MatrixUtil;
 import aspire.util.XmlUtil;
 
+import mx.utils.ObjectUtil;
 import flash.geom.Matrix;
 
 import flump.mold.KeyframeMold;
@@ -28,11 +29,12 @@ public class XflKeyframe
     public static const TWEEN_TYPE_MOTION :String = "motion";
 
     public static const SYMBOL_INSTANCE :String = "DOMSymbolInstance";
+    public static const TEXT_INSTANCE :String = "DOMDynamicText";
 
     use namespace xflns;
 
     public static function parse (lib :XflLibrary, baseLocation :String, xml :XML,
-        flipbook :Boolean) :KeyframeMold {
+        flipbook :Boolean, guide :Boolean) :KeyframeMold {
 
         const kf :KeyframeMold = new KeyframeMold();
         kf.index = XmlUtil.getIntAttr(xml, INDEX);
@@ -55,14 +57,23 @@ public class XflKeyframe
         }
 
         var instanceXml :XML = null;
+        var isTextInstance :Boolean = false;
         for each (var frameChildXml :XML in xml.elements.elements()) {
-            if (frameChildXml.name().localName == SYMBOL_INSTANCE) {
+            var localName:String = frameChildXml.name().localName;
+            if (localName == SYMBOL_INSTANCE) {
                 if (instanceXml != null)  {
                     lib.addError(location, ParseError.CRIT, "There can be only one symbol instance at " +
                         "a time in a keyframe.");
                 } else instanceXml = frameChildXml;
+            } else if (localName == TEXT_INSTANCE) {
+                if (!guide) {
+                    lib.addError(location, ParseError.CRIT, "Text instances must be on guide layers.");
+                } else instanceXml = frameChildXml;
+                isTextInstance = true;
             } else {
-                lib.addError(location, ParseError.CRIT, "Non-symbols may not be in movie layers");
+                if (!guide) {
+                    lib.addError(location, ParseError.CRIT, "Non-supported instance found. Only movieClip instances or Sprites are allowed.");
+                } else instanceXml = frameChildXml;
             }
         }
 
@@ -78,9 +89,23 @@ public class XflKeyframe
 
         // Fill this in with the library name for now. XflLibrary.finishLoading will swap in the
         // symbol or implicit symbol the library item corresponds to.
-        kf.ref = XmlUtil.getStringAttr(instanceXml, XflInstance.LIBRARY_ITEM_NAME);
-        kf.visible = XmlUtil.getBooleanAttr(instanceXml, XflInstance.IS_VISIBLE, true);
+        try {
+            var ref:String = XmlUtil.getStringAttr(instanceXml, XflInstance.LIBRARY_ITEM_NAME, '');
+        } catch (myError:Error) {
+        }
+        try {
+            kf.ref = ref || XmlUtil.getStringAttr(instanceXml, XflInstance.INSTANCE_NAME, '');
+        } catch (myError:Error) {
+        }
 
+        if (isTextInstance) {
+            var width:Number = XmlUtil.getNumberAttr(instanceXml, 'width', 0);
+            var height:Number = XmlUtil.getNumberAttr(instanceXml, 'height', 0);
+            kf.width = width;
+            kf.height = height;
+        }
+
+        kf.visible = XmlUtil.getBooleanAttr(instanceXml, XflInstance.IS_VISIBLE, true);
 
         // Read the matrix transform
         var matrix :Matrix;

@@ -98,6 +98,9 @@ public class XflLibrary
         if (!_toPublish.add(movie)) return;
 
         for each (var layer :LayerMold in movie.layers) {
+            // Skip guide layers, they reference things that don't exist in the library
+            if (layer.guide) continue;
+
             for each (var kf :KeyframeMold in layer.keyframes) {
                 var swfTexture :SwfTexture = null;
                 if (movie.flipbook) {

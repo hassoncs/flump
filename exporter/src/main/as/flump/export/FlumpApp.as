@@ -71,20 +71,6 @@ public class FlumpApp
                 newProject();
             }
 
-//            var controller = _projects[0];
-
-            // Clover-hack, auto export when the project is opened for easy command-line use
-//            controller.reloadNow();
-//
-//            controller.exportAll(true);
-//            controller.exportAll(false);
-//            controller.exportAll(true);
-//
-//        var clickEvent : MouseEvent = new MouseEvent(MouseEvent.CLICK);
-//        controller.win.exportAll.dispatchEvent(clickEvent);
-
-//            controller.save();
-
             trace("CLOVER HACK WORKING!");
         });
 

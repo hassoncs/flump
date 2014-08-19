@@ -411,8 +411,8 @@ public class ProjectController
             status.updateValid(Ternary.of(lib.valid));
 
             _docsToSave--;
-            if (_docsToSave <= 0) {
-                exportAll(true);
+            if (_docsToSave == 0) {
+                exportAll(false);
                 trace("CLOVERFIELD AUTO EXPORT COMPLETE!  (closing application now...)");
                 _win.close();
                 NA.exit();

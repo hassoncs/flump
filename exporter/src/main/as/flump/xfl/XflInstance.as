@@ -3,24 +3,24 @@
 
 package flump.xfl {
 
-public class XflInstance
-{
+public class XflInstance {
     use namespace xflns;
 
-    public static const LIBRARY_ITEM_NAME :String = "libraryItemName";
-    public static const IS_VISIBLE :String = "isVisible";
-    public static const ALPHA :String = "alphaMultiplier";
+    public static const INSTANCE_NAME:String = "name";
+    public static const LIBRARY_ITEM_NAME:String = "libraryItemName";
+    public static const IS_VISIBLE:String = "isVisible";
+    public static const ALPHA:String = "alphaMultiplier";
 
-    public static function getColorXml (instanceXml :XML) :XML {
+    public static function getColorXml(instanceXml:XML):XML {
         return (instanceXml.color != null ? instanceXml.color.Color[0] : null);
     }
 
-    public static function getTransformationPointXml (instanceXml :XML) :XML {
+    public static function getTransformationPointXml(instanceXml:XML):XML {
         return (instanceXml.transformationPoint != null ?
-            instanceXml.transformationPoint.Point[0] : null);
+                instanceXml.transformationPoint.Point[0] : null);
     }
 
-    public static function getMatrixXml (instanceXml :XML) :XML {
+    public static function getMatrixXml(instanceXml:XML):XML {
         return (instanceXml.matrix != null ? instanceXml.matrix.Matrix[0] : null);
     }
 }
