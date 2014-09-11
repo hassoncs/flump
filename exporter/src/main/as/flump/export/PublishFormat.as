@@ -17,7 +17,7 @@ public class PublishFormat
 
     public function get modified () :Boolean { throw new Error("Must be implemented by a subclass"); }
 
-    public function publish () :void { throw new Error("Must be implemented by a subclass"); }
+    public function publish (metadataOnly :Boolean) :void { throw new Error("Must be implemented by a subclass"); }
 
     protected function createAtlases (prefix :String = "") :Vector.<Atlas> {
         const packer :TexturePacker = TexturePacker.withLib(_lib)

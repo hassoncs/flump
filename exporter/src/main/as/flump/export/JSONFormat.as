@@ -31,17 +31,19 @@ public class JSONFormat extends PublishFormat
         return readJSON(_metaFile).md5 != _lib.md5;
     }
 
-    override public function publish () :void {
+    override public function publish (metadataOnly :Boolean) :void {
         const libExportDir :File = _destDir.resolvePath(_prefix);
         // Ensure any previously generated atlases don't linger
         if (libExportDir.exists) libExportDir.deleteDirectory(/*deleteDirectoryContents=*/true);
         libExportDir.createDirectory();
 
-        const atlases :Vector.<Atlas> = createAtlases();
-        for each (var atlas :Atlas in atlases) {
-            Files.write(
-                libExportDir.resolvePath(atlas.filename),
-                F.bind(AtlasUtil.writePNG, atlas, F._1));
+        if (!metadataOnly) {
+            const atlases:Vector.<Atlas> = createAtlases();
+            for each (var atlas:Atlas in atlases) {
+                Files.write(
+                        libExportDir.resolvePath(atlas.filename),
+                        F.bind(AtlasUtil.writePNG, atlas, F._1));
+            }
         }
 
         const json :String = _lib.toJSONString(atlases, _conf);

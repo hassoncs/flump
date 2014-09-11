@@ -29,7 +29,7 @@ public class XMLFormat extends PublishFormat
         return !_metaFile.exists || Util.bytesToXML(Files.read(_metaFile)).@md5 != _lib.md5;
     }
 
-    override public function publish () :void {
+    override public function publish (metadataOnly :Boolean) :void {
         const libExportDir :File = _destDir.resolvePath(_prefix);
         // Ensure any previously generated atlases don't linger
         if (libExportDir.exists) libExportDir.deleteDirectory(/*deleteDirectoryContents=*/true);

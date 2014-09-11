@@ -38,7 +38,7 @@ public class JSONZipFormat extends PublishFormat
         return md5 != _lib.md5;
     }
 
-    override public function publish() :void {
+    override public function publish(metadataOnly :Boolean) :void {
         const zip :FZip = new FZip();
 
         function addToZip(name :String, contentWriter :Function) :void {

@@ -23,7 +23,9 @@ public class Publisher
     }
 
     public function publish (lib :XflLibrary) :void {
-        for each (var format :PublishFormat in instantiate(lib)) format.publish();
+        // Cloverfield hack: only export the images for non-layouts
+        var metadataOnly :Boolean = (lib.location.indexOf('layout') > -1);
+        for each (var format :PublishFormat in instantiate(lib)) format.publish(metadataOnly);
     }
 
     protected function instantiate (lib :XflLibrary) :Vector.<PublishFormat> {
