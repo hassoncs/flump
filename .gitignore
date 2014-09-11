@@ -1,1 +1,7 @@
 exporter/src/test/export
+
+node_modules
+
+dist
+
+.DS_Store
