@@ -30,6 +30,9 @@ import spark.components.DataGrid;
 import spark.components.Window;
 import spark.events.GridSelectionEvent;
 
+import com.adobe.air.filesystem.FileMonitor;
+import com.adobe.air.filesystem.events.FileMonitorEvent;
+
 public class ProjectController
 {
     public static const NA :NativeApplication = NativeApplication.nativeApplication;
@@ -384,6 +387,7 @@ public class ProjectController
         var name :String = file.nativePath.substring(importPathLen).replace(
             new RegExp("\\" + File.separator, "g"), "/");
 
+        var loader :FlaLoader;
         var load :Future;
         switch (Files.getExtension(file)) {
         case "xfl":
@@ -392,37 +396,54 @@ public class ProjectController
             break;
         case "fla":
             name = name.substr(0, name.lastIndexOf("."));
-            load = new FlaLoader().load(name, file);
+            loader = new FlaLoader();
+            load = loader.load(name, file);
             break;
         default:
             // Unsupported file type, ignore
             return;
         }
 
-        const status :DocStatus = new DocStatus(name, Ternary.UNKNOWN, Ternary.UNKNOWN, null);
+        const status :DocStatus = new DocStatus(name, Ternary.UNKNOWN, Ternary.UNKNOWN, null, file.nativePath);
         _flashDocsGrid.dataProvider.addItem(status);
-
         _docsToSave++;
-        load.succeeded.connect(function (lib :XflLibrary) :void {
-            var pub :Publisher = createPublisher();
-            status.lib = lib;
-            status.updateModified(Ternary.of(pub == null || pub.modified(lib)));
-            for each (var err :ParseError in lib.getErrors()) _errorsGrid.dataProvider.addItem(err);
-            status.updateValid(Ternary.of(lib.valid));
 
-            _docsToSave--;
-            if (_docsToSave == 0) {
-                exportAll(false);
-                trace("CLOVERFIELD AUTO EXPORT COMPLETE!  (closing application now...)");
-                _win.close();
-                NA.exit();
-            }
+        status.monitor.addEventListener(FileMonitorEvent.CHANGE, function(e:FileMonitorEvent):void
+        {
+            trace("file was changed: " + e.file.nativePath);
+            var load:Future = new FlaLoader().load(name, file);
+            load.succeeded.connect(function(lib :XflLibrary) :void {
+                updateLoadedLibrary(lib, status);
+            });
         });
+
+
+        load.succeeded.connect(function(lib :XflLibrary) :void {
+            updateLoadedLibrary(lib, status);
+        });
+
         load.failed.connect(function (error :Error) :void {
             trace("Failed to load " + file.nativePath + ": " + error);
             status.updateValid(Ternary.FALSE);
             throw error;
         });
+    }
+
+    public function updateLoadedLibrary(lib :XflLibrary, status :DocStatus) :void {
+        var pub :Publisher = createPublisher();
+        status.lib = lib;
+        status.updateModified(Ternary.of(pub == null || pub.modified(lib)));
+        for each (var err :ParseError in lib.getErrors()) _errorsGrid.dataProvider.addItem(err);
+        status.updateValid(Ternary.of(lib.valid));
+
+        _docsToSave--;
+        if (_docsToSave <= 0) {
+            trace('Cloverfield auto export triggered.');
+            exportAll(true);
+            //                trace("CLOVERFIELD AUTO EXPORT COMPLETE!  (closing application now...)");
+            //                _win.close();
+            //                NA.exit();
+        }
     }
 
     public function setProjectDirty (val :Boolean) :void {
@@ -446,6 +467,7 @@ public class ProjectController
     protected var _docsToSave :Number = 0;
     protected var _projectDirty :Boolean; // true if project has unsaved changes
 
+
     private static const log :Log = Log.getLog(ProjectController);
 }
 }
@@ -455,22 +477,39 @@ import flash.events.EventDispatcher;
 import flump.export.Ternary;
 import flump.xfl.XflLibrary;
 
+import flash.filesystem.File;
+
 import mx.core.IPropertyChangeNotifier;
 import mx.events.PropertyChangeEvent;
+
+import com.adobe.air.filesystem.FileMonitor;
+import com.adobe.air.filesystem.events.FileMonitorEvent;
 
 class DocStatus extends EventDispatcher implements IPropertyChangeNotifier {
     public var path :String;
     public var modified :String;
     public var valid :String = PENDING;
     public var lib :XflLibrary;
+    public var monitor:FileMonitor;
 
-    public function DocStatus (path :String, modified :Ternary, valid :Ternary, lib :XflLibrary) {
+    public function DocStatus (path :String, modified :Ternary, valid :Ternary, lib :XflLibrary, nativePath :String) {
         this.lib = lib;
         this.path = path;
         _uid = path;
 
         updateModified(modified);
         updateValid(valid);
+        setupFileMonitoring(nativePath);
+    }
+
+    private function setupFileMonitoring(path:String):void
+    {
+        var swfPath:String = path.replace('.fla', '.swf');
+        var swfFile:File = new File(swfPath);
+        monitor = new FileMonitor(swfFile, 5000);
+        monitor.watch();
+
+        trace("watching file: " + swfFile.nativePath);
     }
 
     public function updateValid (newValid :Ternary) :void {
