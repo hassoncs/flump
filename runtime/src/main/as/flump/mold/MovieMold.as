@@ -55,10 +55,8 @@ public class MovieMold
             for each (var kf :KeyframeMold in layer.keyframes) {
                 kf.x *= scale;
                 kf.y *= scale;
-                // Cloverfield hack:
-                // The pivot point seems to be wrong in the layout files with these lines left in
-                // kf.pivotX *= scale;
-                // kf.pivotY *= scale;
+                kf.pivotX *= scale;
+                kf.pivotY *= scale;
             }
         }
         return clone;
