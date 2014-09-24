@@ -18,8 +18,6 @@ public class XflLayer {
     use namespace xflns;
 
     public static function parse(lib:XflLibrary, baseLocation:String, xml:XML, flipbook:Boolean, guide:Boolean):LayerMold {
-        trace("Parsing layer, " + baseLocation + ", " + guide);
-
         var layer:LayerMold = new LayerMold();
         layer.name = XmlUtil.getStringAttr(xml, NAME);
         layer.guide = guide;
@@ -30,7 +28,6 @@ public class XflLayer {
             layer.keyframes.push(XflKeyframe.parse(lib, location, frameXml, flipbook, guide));
         }
         if (layer.keyframes.length == 0) lib.addError(location, ParseError.INFO, "No keyframes on layer");
-
 
         // Store details about the text in this layer
         if (guide) {

@@ -410,10 +410,10 @@ public class ProjectController
 
         status.monitor.addEventListener(FileMonitorEvent.CHANGE, function(e:FileMonitorEvent):void
         {
-            trace("file was changed: " + e.file.nativePath);
+            trace("File was changed: " + e.file.nativePath);
             var load:Future = new FlaLoader().load(name, file);
             load.succeeded.connect(function(lib :XflLibrary) :void {
-                updateLoadedLibrary(lib, status);
+                forceUpdateLoadedLibrary(lib, status);
             });
         });
 
@@ -440,10 +440,19 @@ public class ProjectController
         if (_docsToSave <= 0) {
             trace('Cloverfield auto export triggered.');
             exportAll(true);
-            //                trace("CLOVERFIELD AUTO EXPORT COMPLETE!  (closing application now...)");
-            //                _win.close();
-            //                NA.exit();
         }
+    }
+
+    public function forceUpdateLoadedLibrary(lib :XflLibrary, status :DocStatus) :void {
+        trace('Cloverfield forced auto export triggered.');
+
+        var pub :Publisher = createPublisher();
+        status.lib = lib;
+        status.updateModified(Ternary.of(true));
+        for each (var err :ParseError in lib.getErrors()) _errorsGrid.dataProvider.addItem(err);
+        status.updateValid(Ternary.of(lib.valid));
+
+        exportAll(true);
     }
 
     public function setProjectDirty (val :Boolean) :void {
