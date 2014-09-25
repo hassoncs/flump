@@ -7,13 +7,16 @@ import aspire.util.F;
 import aspire.util.Log;
 import aspire.util.StringUtil;
 
+import flash.desktop.NativeProcessStartupInfo;
 import flash.desktop.NativeApplication;
+import flash.desktop.NativeProcess;
 import flash.display.NativeMenu;
 import flash.display.NativeMenuItem;
 import flash.display.Stage;
 import flash.display.StageQuality;
 import flash.events.Event;
 import flash.events.MouseEvent;
+import flash.events.ProgressEvent;
 import flash.filesystem.File;
 import flash.utils.IDataOutput;
 
@@ -414,8 +417,11 @@ public class ProjectController
             var load:Future = new FlaLoader().load(name, file);
             load.succeeded.connect(function(lib :XflLibrary) :void {
                 status.lib = lib;
-                log.info("auto exportFlashDocument");
+                log.info("Running auto export-");
+
                 exportFlashDocument(status);
+                tryCallExternalCommand();
+                _win.nativeWindow.minimize();
             });
         });
 
@@ -441,6 +447,7 @@ public class ProjectController
         _docsToSave--;
         if (_docsToSave <= 0) {
             trace('Cloverfield auto export triggered.');
+            _win.nativeWindow.minimize();
             exportAll(true);
         }
     }
@@ -451,6 +458,47 @@ public class ProjectController
             updateWindowTitle();
         }
     }
+
+    public function tryCallExternalCommand() :void {
+        try {
+            callExternalCommand();
+        } catch (e:Error) {
+            log.error(e.name, e.message, e.getStackTrace());
+        }
+    }
+
+    public function callExternalCommand() :void {
+        log.info("_externalAppCallbackWorkingDir", _externalAppCallbackWorkingDir);
+        log.info("_externalAppCallbackCmd", _externalAppCallbackCmd);
+        log.info("_externalAppCallbackArgs", _externalAppCallbackArgs);
+        if (!_externalAppCallbackCmd || !_externalAppCallbackWorkingDir) return;
+
+        var nativeProcessStartupInfo:NativeProcessStartupInfo = new NativeProcessStartupInfo();
+        var file:File = new File(_externalAppCallbackCmd);
+        var processArgs:Vector.<String> = new Vector.<String>();
+        var process:NativeProcess = new NativeProcess();
+
+        var nativeCmd:String = 'cd ' + _externalAppCallbackWorkingDir + ';' + _externalAppCallbackCmd + ' ' + _externalAppCallbackArgs;
+        log.info("Flump executing native command: '" + nativeCmd + "'");
+
+        processArgs.push(_externalAppCallbackArgs);
+        nativeProcessStartupInfo.executable = file;
+        nativeProcessStartupInfo.workingDirectory = new File(_externalAppCallbackWorkingDir);
+        nativeProcessStartupInfo.arguments = processArgs;
+
+        process.addEventListener(ProgressEvent.STANDARD_OUTPUT_DATA, function onOutputData(event:ProgressEvent) :void
+        {
+            var stdOut:flash.utils.IDataInput = process.standardOutput;
+            var data:String = stdOut.readUTFBytes(process.standardOutput.bytesAvailable);
+            log.info(data);
+        });
+        process.start(nativeProcessStartupInfo);
+    }
+
+
+    public var _externalAppCallbackCmd :String;
+    public var _externalAppCallbackArgs :String;
+    public var _externalAppCallbackWorkingDir :String;
 
     protected var _importDirectory :File;
 

@@ -44,11 +44,17 @@ public class FlumpApp
 
         Log.setLevel("", Log.INFO);
 
+        var project :ProjectController;
         var launched :Boolean = false;
         NA.addEventListener(InvokeEvent.INVOKE, function (event :InvokeEvent) :void {
             if (event.arguments.length > 0) {
                 // A project file has been double-clicked. Open it.
-                openProject(new File(event.arguments[0]));
+                project = openProject(new File(event.arguments[0]));
+                if (event.arguments.length > 1) {
+                    project._externalAppCallbackWorkingDir = event.arguments[1];
+                    project._externalAppCallbackCmd = event.arguments[2];
+                    project._externalAppCallbackArgs = event.arguments[3];
+                }
             }
 
             if (!launched) {
@@ -58,7 +64,7 @@ public class FlumpApp
                     for each (var pws :ProjectWindowSettings in FlumpSettings.projectWindowSettings) {
                         var file :File = new File(pws.configFilePath);
                         if (file.exists) {
-                            var project :ProjectController = openProject(file);
+                            project = openProject(file);
                             project.win.nativeWindow.x = pws.windowX;
                             project.win.nativeWindow.y = pws.windowY;
                         }
@@ -70,8 +76,7 @@ public class FlumpApp
             if (_projects.length == 0) {
                 newProject();
             }
-
-            trace("CLOVER HACK WORKING!");
+            trace("Cloverfield booted up. Processing now...");
         });
 
         // When we quit, save the list of currently-open projects
@@ -193,6 +198,7 @@ public class FlumpApp
 
     protected var _projects :Array = [];
     protected var _previewController :PreviewController;
+//    private static const log :Log = Log.getLog(FlumpApp);
 
     protected static var _app :FlumpApp;
 }
