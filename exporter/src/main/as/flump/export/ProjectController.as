@@ -179,7 +179,7 @@ public class ProjectController
             if (status.isValid && (!modifiedOnly || status.isModified)) {
                 exportFlashDocument(status);
             } else if (modifiedOnly && !status.isModified) {
-                trace("Skipping export, nothing has changed.");
+                trace("Skipping '" + status.path + "'-- it hasn't changed.");
             }
         }
     }
@@ -413,7 +413,9 @@ public class ProjectController
             trace("File was changed: " + e.file.nativePath);
             var load:Future = new FlaLoader().load(name, file);
             load.succeeded.connect(function(lib :XflLibrary) :void {
-                forceUpdateLoadedLibrary(lib, status);
+                status.lib = lib;
+                log.info("auto exportFlashDocument");
+                exportFlashDocument(status);
             });
         });
 
@@ -441,18 +443,6 @@ public class ProjectController
             trace('Cloverfield auto export triggered.');
             exportAll(true);
         }
-    }
-
-    public function forceUpdateLoadedLibrary(lib :XflLibrary, status :DocStatus) :void {
-        trace('Cloverfield forced auto export triggered.');
-
-        var pub :Publisher = createPublisher();
-        status.lib = lib;
-        status.updateModified(Ternary.of(true));
-        for each (var err :ParseError in lib.getErrors()) _errorsGrid.dataProvider.addItem(err);
-        status.updateValid(Ternary.of(lib.valid));
-
-        exportAll(true);
     }
 
     public function setProjectDirty (val :Boolean) :void {

@@ -32,10 +32,14 @@ public class FlaLoader
 
         var loadSWF :Future = _library.loadSWF(Files.replaceExtension(file, "swf"));
         loadSWF.succeeded.connect(function () :void {
+            log.info("Loaded, parsing its library now...");
             // Since listLibrary shuts down the executor, wait for the swf to load first
             listLibrary(file);
         });
-        loadSWF.failed.connect(F.adapt(_loader.shutdown));
+        loadSWF.failed.connect(function () :void {
+            log.info("Damn, the fla failed to load:", file.nativePath, "with name", name);
+            F.adapt(_loader.shutdown);
+        });
 
         return future;
     }
@@ -46,6 +50,7 @@ public class FlaLoader
             const zip :FZip = new FZip();
             zip.loadBytes(data);
 
+            log.info("Fla zip loaded, loading domFile and symbols...");
             const domFile :FZipFile = zip.getFileByName("DOMDocument.xml");
             const symbolPaths :Vector.<String> = _library.parseDocumentFile(
                 domFile.content, domFile.filename);
@@ -56,6 +61,7 @@ public class FlaLoader
             _loader.shutdown();
         });
         loadZip.failed.connect(function (error :Error) :void {
+            log.error("Failed to load the zip from the fla", error.message);
             _library.addTopLevelError(ParseError.CRIT, error.message, error);
             _loader.shutdown();
         });
