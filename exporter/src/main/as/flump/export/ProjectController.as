@@ -411,15 +411,20 @@ public class ProjectController
         _flashDocsGrid.dataProvider.addItem(status);
         _docsToSave++;
 
-        status.monitor.addEventListener(FileMonitorEvent.CHANGE, function(e:FileMonitorEvent):void
+        status.addEventListener(FileMonitorEvent.CHANGE, function(e:FileMonitorEvent):void
         {
             trace("File was changed: " + e.file.nativePath);
             var load:Future = new FlaLoader().load(name, file);
             load.succeeded.connect(function(lib :XflLibrary) :void {
                 status.lib = lib;
                 log.info("Running auto export-");
+                if (_docFinder != null) {
+                    _docFinder.shutdownNow();
+                }
 
                 exportFlashDocument(status);
+                log.info("Export done, about to run external command.");
+
                 tryCallExternalCommand();
                 _win.nativeWindow.minimize();
             });
@@ -519,6 +524,9 @@ public class ProjectController
 }
 }
 
+import flash.utils.Timer;
+import flash.events.TimerEvent;
+import flash.events.Event;
 import flash.events.EventDispatcher;
 
 import flump.export.Ternary;
@@ -538,6 +546,8 @@ class DocStatus extends EventDispatcher implements IPropertyChangeNotifier {
     public var valid :String = PENDING;
     public var lib :XflLibrary;
     public var monitor:FileMonitor;
+    private var lastChangedTimer:Timer;
+    private var waitForSaveTimer:Timer;
 
     public function DocStatus (path :String, modified :Ternary, valid :Ternary, lib :XflLibrary, nativePath :String) {
         this.lib = lib;
@@ -555,6 +565,24 @@ class DocStatus extends EventDispatcher implements IPropertyChangeNotifier {
         var swfFile:File = new File(swfPath);
         monitor = new FileMonitor(swfFile, 5000);
         monitor.watch();
+        var doc:DocStatus = this;
+
+        monitor.addEventListener(FileMonitorEvent.CHANGE, function(e:FileMonitorEvent):void
+        {
+            if (lastChangedTimer && lastChangedTimer.running) return;
+            lastChangedTimer = new Timer(MONITOR_DEBOUNCE_DELAY_MS, 0 /* Repeat */);
+//            lastChangedTimer.start();
+
+            trace('Saw file change, waiting for save to complete before trying to read the file.');
+            waitForSaveTimer = new Timer(1500, 0 /* Repeat */);
+            waitForSaveTimer.addEventListener(TimerEvent.TIMER, function(ev:TimerEvent) :void {
+                waitForSaveTimer.stop();
+                trace('Dispatching change event...');
+                doc.dispatchEvent(e);
+            });
+            waitForSaveTimer.start();
+        });
+
 
         trace("watching file: " + swfFile.nativePath);
     }
@@ -594,4 +622,5 @@ class DocStatus extends EventDispatcher implements IPropertyChangeNotifier {
     protected static const PENDING :String = "...";
     protected static const ERROR :String = "ERROR";
     protected static const YES :String = "Yes";
+    protected static const MONITOR_DEBOUNCE_DELAY_MS :Number = 5000;
 }

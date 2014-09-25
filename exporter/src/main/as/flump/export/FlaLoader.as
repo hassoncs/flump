@@ -56,7 +56,8 @@ public class FlaLoader
                 domFile.content, domFile.filename);
             for each (var path :String in symbolPaths) {
                 var symbolFile :FZipFile = zip.getFileByName(path);
-                _library.parseLibraryFile(symbolFile.content, path);
+                var layoutOnlyLibrary :Boolean = (path.toLowerCase().indexOf('layout') > -1);
+                _library.parseLibraryFile(symbolFile.content, path, layoutOnlyLibrary);
             }
             _loader.shutdown();
         });

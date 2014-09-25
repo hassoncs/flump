@@ -235,7 +235,8 @@ public class XflLibrary
         return paths;
     }
 
-    public function parseLibraryFile (fileData :ByteArray, path :String) :void {
+    public function parseLibraryFile (fileData :ByteArray, path :String, layoutsOnly: Boolean) :void {
+//        if (layoutsOnly) return;
         const xml :XML = Util.bytesToXML(fileData);
         if (!XflSymbol.isSymbolItem(xml)) {
             addTopLevelError(ParseError.DEBUG,

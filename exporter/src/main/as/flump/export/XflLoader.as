@@ -57,7 +57,7 @@ public class XflLoader
     protected function parseLibraryFile (file :File) :void {
         const loadLibraryFile :Future = Files.load(file, _loader);
         loadLibraryFile.succeeded.connect(function (data :ByteArray) :void {
-            _library.parseLibraryFile(data, file.nativePath);
+            _library.parseLibraryFile(data, file.nativePath, false);
         });
         loadLibraryFile.failed.connect(function (error :Error) :void {
             _library.addTopLevelError(ParseError.CRIT, error.message, error);
