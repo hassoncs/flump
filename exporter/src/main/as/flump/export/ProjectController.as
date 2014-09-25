@@ -563,7 +563,7 @@ class DocStatus extends EventDispatcher implements IPropertyChangeNotifier {
     {
         var swfPath:String = path.replace('.fla', '.swf');
         var swfFile:File = new File(swfPath);
-        monitor = new FileMonitor(swfFile, 5000);
+        monitor = new FileMonitor(swfFile, 250);
         monitor.watch();
         var doc:DocStatus = this;
 
@@ -571,10 +571,13 @@ class DocStatus extends EventDispatcher implements IPropertyChangeNotifier {
         {
             if (lastChangedTimer && lastChangedTimer.running) return;
             lastChangedTimer = new Timer(MONITOR_DEBOUNCE_DELAY_MS, 0 /* Repeat */);
-//            lastChangedTimer.start();
+            lastChangedTimer.addEventListener(TimerEvent.TIMER, function(ev:TimerEvent) :void {
+                lastChangedTimer.stop();
+            });
+            lastChangedTimer.start();
 
             trace('Saw file change, waiting for save to complete before trying to read the file.');
-            waitForSaveTimer = new Timer(1500, 0 /* Repeat */);
+            waitForSaveTimer = new Timer(2500, 0 /* Repeat */);
             waitForSaveTimer.addEventListener(TimerEvent.TIMER, function(ev:TimerEvent) :void {
                 waitForSaveTimer.stop();
                 trace('Dispatching change event...');
